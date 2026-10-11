@@ -14,12 +14,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <style>
     html, body { margin: 0; height: 100%; background: #fff7fa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    #loader { display: flex; justify-content: center; align-items: center; height: 100%; color: #d95c8f; font-weight: bold; font-size: 16px; }
+    iframe { border: 0; width: 100%; height: 100%; display: block; }
     #err { display: none; padding: 28px 24px; color: #333; line-height: 1.7; text-align: center; margin-top: 40px; }
     #err b { color: #d0443c; }
+    #err a { display: inline-block; margin-top: 14px; padding: 12px 20px; background: #d95c8f; color: #fff; border-radius: 12px; text-decoration: none; font-weight: bold; }
   </style>
   <script>
-    // 카카오톡 인앱 브라우저로 열리면 사파리/크롬 외부 브라우저로 자동 이동
+    // 카카오톡 인앱 브라우저로 열리면 기본 브라우저로 자동 이동
     (function () {
       const ua = navigator.userAgent.toLowerCase(), url = location.href;
       if (ua.indexOf('kakaotalk') > -1) {
@@ -33,8 +34,7 @@
   </script>
 </head>
 <body>
-  <div id="loader">⚡ 명함 앱으로 연결 중...</div>
-  
+  <iframe id="f" allow="camera; clipboard-write; clipboard-read" style="display:none"></iframe>
   <div id="err">
     <b>앱 주소(GAS_URL)가 올바르지 않아요.</b><br>
     <code>…/macros/s/…/exec</code> 로 끝나는<br>웹 앱 주소를 넣어야 해요.<br>
@@ -46,10 +46,8 @@
 
     const ok = /^https:\/\/script\.google\.com\/(a\/[\w.\-]+\/)?macros\/s\/[\w\-]+\/exec/.test(GAS_URL);
     if (ok) {
-      // 구글 드라이브 iframe 차단을 피하기 위해 리디렉션 처리
-      window.location.replace(GAS_URL);
+      const f = document.getElementById('f'); f.src = GAS_URL; f.style.display = 'block';
     } else {
-      document.getElementById('loader').style.display = 'none';
       document.getElementById('err').style.display = 'block';
     }
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
