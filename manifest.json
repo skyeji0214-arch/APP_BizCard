@@ -1,16 +1,16 @@
 {
-  "name": "명함등록",
-  "short_name": "명함등록",
-  "description": "명함을 촬영해 간편하게 등록하고 관리하는 앱",
+  "name": "명함보관",
+  "short_name": "명함보관",
+  "description": "명함을 촬영해 간편하게 보관하고 관리하는 앱",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f5f8ff",
-  "theme_color": "#f5f8ff",
+  "background_color": "#fff7fa",
+  "theme_color": "#fff7fa",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "Code_Generated_Image.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "Code_Generated_Image%20(3).png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "Code_Generated_Image%20(2).png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
