@@ -33,6 +33,23 @@
       margin-top: 50px;
     }
   </style>
+  <script>
+    // 카카오톡 및 인앱 브라우저 감지 시 기본 브라우저로 자동 분기 처리
+    (function redirectToExternalBrowser() {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const targetUrl = location.href;
+
+      if (userAgent.indexOf('kakaotalk') > -1) {
+        if (userAgent.indexOf('android') > -1) {
+          // 안드로이드 카카오톡: 크롬 브라우저 강제 호출
+          location.href = 'intent://' + targetUrl.replace(/https?:\/\//i, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+        } else if (userAgent.indexOf('iphone') > -1 || userAgent.indexOf('ipad') > -1) {
+          // 아이폰 카카오톡: Safari 안내 또는 외부 브라우저 호출
+          location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(targetUrl);
+        }
+      }
+    })();
+  </script>
 </head>
 <body>
   <iframe id="f" allow="camera; clipboard-write; clipboard-read" style="display:none"></iframe>
@@ -41,7 +58,6 @@
   </div>
 
   <script>
-    // 최신 구글 앱스 크립트 배포 주소
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbwvwi2OkY7RHHqSPV7rxcWuXATsaSayQu_m0hrsKEJy2VE4deMpq_-eJrJ1eqhs7hQUgg/exec';
 
     if (GAS_URL.indexOf('https://script.google.com') === 0) {
