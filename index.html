@@ -7,52 +7,103 @@
   <meta name="apple-mobile-web-app-title" content="명함보관">
   <meta name="theme-color" content="#fff7fa">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon-192.png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" href="Code_Generated_Image.png">
+  <link rel="apple-touch-icon" href="Code_Generated_Image%20(1).png">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <style>
-    html, body { margin: 0; height: 100%; background: #fff7fa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    #loader { display: flex; justify-content: center; align-items: center; height: 100%; color: #d95c8f; font-weight: bold; font-size: 16px; }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #fff7fa;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif; }
+    /* 앱 화면: 앱스크립트를 이 페이지 안에 끼워 넣어서 보여줌 (구글 배너가 안 보이는 방식) */
+    #frame { display: block; border: 0; width: 100%; height: 100%; height: calc(100dvh - env(safe-area-inset-bottom, 0px)); background: #fff7fa; }
+    #loader { position: fixed; left: 0; top: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center;
+      background: #fff7fa; color: #d95c8f; font-weight: bold; font-size: 16px; pointer-events: none; }
     #err { display: none; padding: 28px 24px; color: #333; line-height: 1.7; text-align: center; margin-top: 40px; }
     #err b { color: #d0443c; }
+    #help { display: none; position: fixed; left: 12px; right: 12px; bottom: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+      background: #fff; border: 1px solid #f3dfe7; border-radius: 18px; padding: 16px; box-shadow: 0 10px 30px rgba(90, 42, 71, .25);
+      color: #3a2431; font-size: 14px; line-height: 1.6; }
+    #help b { display: block; font-size: 15px; margin-bottom: 4px; }
+    #help .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    #help button { flex: 1 1 auto; border: 0; border-radius: 12px; padding: 11px 12px; font: inherit; font-weight: 600; background: #ffe8f0; color: #d95c8f; }
+    #help button.main { background: #d95c8f; color: #fff; }
   </style>
-  <script>
-    // 카카오톡 인앱 브라우저로 열리면 사파리/크롬 외부 브라우저로 자동 이동
-    (function () {
-      const ua = navigator.userAgent.toLowerCase(), url = location.href;
-      if (ua.indexOf('kakaotalk') > -1) {
-        if (ua.indexOf('android') > -1) {
-          location.href = 'intent://' + url.replace(/https?:\/\//i, '') + '#Intent;scheme=https;package=com.android.chrome;end';
-        } else if (ua.indexOf('iphone') > -1 || ua.indexOf('ipad') > -1) {
-          location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
-        }
-      }
-    })();
-  </script>
 </head>
 <body>
-  <div id="loader">⚡ 명함 앱으로 연결 중...</div>
-  
+  <iframe id="frame" title="명함보관" allow="camera; clipboard-write"></iframe>
+  <div id="loader">⚡ 명함보관 여는 중...</div>
+
   <div id="err">
     <b>앱 주소(GAS_URL)가 올바르지 않아요.</b><br>
     <code>…/macros/s/…/exec</code> 로 끝나는<br>웹 앱 주소를 넣어야 해요.<br>
     (편집기 주소 <code>…/edit</code> 는 열리지 않아요)
   </div>
 
-  <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwvwi2OkY7RHHqSPV7rxcWuXATsaSayQu_m0hrsKEJy2VE4deMpq_-eJrJ1eqhs7hQUgg/exec';
+  <div id="help">
+    <b>연결이 늦어지고 있어요</b>
+    화면이 정상으로 보이면 [닫기]를 눌러주세요.<br>
+    계속 안 열리면 [앱 바로 열기]를 눌러주세요.
+    <div class="btns">
+      <button class="main" id="bRetry">다시 시도</button>
+      <button id="bDirect">앱 바로 열기</button>
+      <button id="bOut" style="display:none">다른 브라우저로 열기</button>
+      <button id="bClose">닫기</button>
+    </div>
+  </div>
 
+  <script>
+    // ▼▼▼ 앱스크립트 웹 앱 주소 (…/exec 로 끝나는 주소) ▼▼▼
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwvwi2OkY7RHHqSPV7rxcWuXATsaSayQu_m0hrsKEJy2VE4deMpq_-eJrJ1eqhs7hQUgg/exec';
+    // ▲▲▲ 다른 앱(명함등록)에 쓸 때는 이 주소만 바꾸면 돼요 ▲▲▲
+
+    const WAIT_MS = 12000;   // 이 시간 안에 앱이 응답하지 않으면 안내 창을 보여줌
+    const el = id => document.getElementById(id);
+    const frame = el('frame'), ua = navigator.userAgent.toLowerCase();
     const ok = /^https:\/\/script\.google\.com\/(a\/[\w.\-]+\/)?macros\/s\/[\w\-]+\/exec/.test(GAS_URL);
-    if (ok) {
-      // 구글 드라이브 iframe 차단을 피하기 위해 리디렉션 처리
-      window.location.replace(GAS_URL);
-    } else {
-      document.getElementById('loader').style.display = 'none';
-      document.getElementById('err').style.display = 'block';
+    let timer = 0;
+
+    function start() {
+      el('help').style.display = 'none';
+      el('loader').style.display = 'flex';
+      clearTimeout(timer);
+      timer = setTimeout(function () { el('loader').style.display = 'none'; el('help').style.display = 'block'; }, WAIT_MS);
+      frame.src = GAS_URL;
     }
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+    // 앱(앱스크립트 화면)이 "정상적으로 열렸어요" 라고 알려주면 로딩 문구와 안내 창을 치움
+    window.addEventListener('message', function (e) {
+      const d = e.data;
+      if (!d || d.app !== 'bizcard' || d.type !== 'ready') return;
+      if (!/^https:\/\/([\w\-]+\.)*(googleusercontent\.com|google\.com)$/.test(e.origin)) return;
+      clearTimeout(timer);
+      el('loader').style.display = 'none';
+      el('help').style.display = 'none';
+    });
+    frame.addEventListener('load', function () { el('loader').style.display = 'none'; });
+
+    el('bRetry').onclick = start;
+    el('bDirect').onclick = function () { location.href = GAS_URL; };
+    el('bClose').onclick = function () { el('help').style.display = 'none'; };
+
+    // 카카오톡 안에서 열렸을 때만: 원할 때 직접 눌러서 바깥 브라우저로 나갈 수 있는 버튼 (자동으로 튕기지 않음)
+    if (ua.indexOf('kakaotalk') > -1) {
+      el('bOut').style.display = '';
+      el('bOut').onclick = function () {
+        const url = location.href;
+        if (ua.indexOf('android') > -1) location.href = 'intent://' + url.replace(/^https?:\/\//i, '') + '#Intent;scheme=https;end';
+        else location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+      };
+    }
+
+    if (ok) {
+      start();
+    } else {
+      frame.style.display = 'none';
+      el('loader').style.display = 'none';
+      el('err').style.display = 'block';
+    }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
   </script>
 </body>
 </html>
