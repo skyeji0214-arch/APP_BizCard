@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>명함보관</title>
   <meta name="apple-mobile-web-app-title" content="명함보관">
   <meta name="theme-color" content="#fff7fa">
@@ -13,34 +13,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <style>
-    html, body { 
-      margin: 0; 
-      padding: 0; 
-      height: 100%; 
-      width: 100%; 
-      overflow: hidden; 
-      background: #fff7fa; 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      touch-action: manipulation;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-    iframe { 
-      border: 0; 
-      width: 100%; 
-      height: 100%; 
-      display: block; 
-      touch-action: auto;
-    }
+    html, body { margin: 0; height: 100%; background: #fff7fa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    #loader { display: flex; justify-content: center; align-items: center; height: 100%; color: #d95c8f; font-weight: bold; font-size: 16px; }
+    #err { display: none; padding: 28px 24px; color: #333; line-height: 1.7; text-align: center; margin-top: 40px; }
+    #err b { color: #d0443c; }
   </style>
-</head>
-<body>
-  <iframe id="app-frame" allow="camera; clipboard-write; clipboard-read"></iframe>
-
   <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwvwi2OkY7RHHqSPV7rxcWuXATsaSayQu_m0hrsKEJy2VE4deMpq_-eJrJ1eqhs7hQUgg/exec';
-
-    // 카카오톡 외부 브라우저 이탈 처리
+    // 카카오톡 인앱 브라우저로 열리면 사파리/크롬 외부 브라우저로 자동 이동
     (function () {
       const ua = navigator.userAgent.toLowerCase(), url = location.href;
       if (ua.indexOf('kakaotalk') > -1) {
@@ -51,14 +30,29 @@
         }
       }
     })();
+  </script>
+</head>
+<body>
+  <div id="loader">⚡ 명함 앱으로 연결 중...</div>
+  
+  <div id="err">
+    <b>앱 주소(GAS_URL)가 올바르지 않아요.</b><br>
+    <code>…/macros/s/…/exec</code> 로 끝나는<br>웹 앱 주소를 넣어야 해요.<br>
+    (편집기 주소 <code>…/edit</code> 는 열리지 않아요)
+  </div>
 
-    // 앱 연결
-    const frame = document.getElementById('app-frame');
-    frame.src = GAS_URL;
+  <script>
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwvwi2OkY7RHHqSPV7rxcWuXATsaSayQu_m0hrsKEJy2VE4deMpq_-eJrJ1eqhs7hQUgg/exec';
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+    const ok = /^https:\/\/script\.google\.com\/(a\/[\w.\-]+\/)?macros\/s\/[\w\-]+\/exec/.test(GAS_URL);
+    if (ok) {
+      // 구글 드라이브 iframe 차단을 피하기 위해 리디렉션 처리
+      window.location.replace(GAS_URL);
+    } else {
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('err').style.display = 'block';
     }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
   </script>
 </body>
 </html>
